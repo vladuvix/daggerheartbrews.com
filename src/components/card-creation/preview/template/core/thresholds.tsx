@@ -1,67 +1,81 @@
 import * as React from 'react';
 
-import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 export const Thresholds: React.FC<{
   thresholds?: [number, number];
   thresholdsEnabled?: boolean;
 }> = ({ thresholds, thresholdsEnabled }) => {
-  const labels = ['minor', 'major', 'severe'];
   if (!thresholdsEnabled) {
     return null;
   }
   return (
     <div
-      className='relative my-1 flex items-center justify-center rounded bg-black px-2'
-      style={{ height: '15px' }}
+      className='relative flex items-center'
+      style={{ height: 42, width: 300 }}
     >
-      {labels.map((label, i) => (
-        <React.Fragment key={label}>
-          <div
-            className={cn(
-              'relative flex items-center',
-              thresholds && i < thresholds.length && 'pr-2',
-            )}
-          >
-            <span
-              className='font-eveleth-clean font-bold text-white'
-              style={{ fontSize: '10px' }}
-            >
-              {label}
-            </span>
-            <span
-              className='absolute text-nowrap text-black'
-              style={{ fontSize: '8px', left: '4px', top: '24px' }}
-            >
-              Mark {i + 1} HP
-            </span>
-          </div>
-          {thresholds && i < thresholds.length ? (
-            <div
-              className='relative flex items-center'
-              style={{ left: '-4px' }}
-            >
-              <img
-                className='absolute'
-                src='/assets/card/damage-block.webp'
-                style={{
-                  left: '50%',
-                  top: '50%',
-                  height: '33px',
-                  width: '33px',
-                  transform: 'translate(-50%,-50%)',
-                }}
-              />
-              <span
-                className='text-eveleth-clean z-10 items-center justify-center text-center font-bold'
-                style={{ width: '33px', fontSize: '16px' }}
-              >
-                {thresholds[i]}
-              </span>
-            </div>
-          ) : null}
-        </React.Fragment>
-      ))}
+      <Image
+        src='/assets/card/damage-thresholds.webp'
+        alt='damage-thresholds'
+        className='absolute'
+        fill
+      />
+      <div
+        className='z-10 flex flex-col justify-center text-center'
+        style={{
+          paddingTop: 20,
+          width: 70,
+          gap: 6,
+        }}
+      >
+        <div
+          className='text-sm font-semibold text-white uppercase'
+          style={{ fontSize: 12 }}
+        >
+          Minor Damage
+        </div>
+        <div className='text-xs text-black'>Mark 1 HP</div>
+      </div>
+      <div className='text-center font-bold' style={{ width: 45 }}>
+        {thresholds ? thresholds[0] : 0}
+      </div>
+
+      <div
+        className='z-10 flex flex-col justify-center text-center'
+        style={{
+          paddingTop: 20,
+          width: 70,
+          gap: 6,
+        }}
+      >
+        <div
+          className='text-sm font-semibold text-white uppercase'
+          style={{ fontSize: 12 }}
+        >
+          Major Damage
+        </div>
+        <div className='text-xs text-black'>Mark 2 HP</div>
+      </div>
+      <div className='text-center font-bold' style={{ width: 45 }}>
+        {thresholds ? thresholds[1] : 0}
+      </div>
+
+      <div
+        className='z-10 flex flex-col justify-center text-center'
+        style={{
+          paddingTop: 20,
+          width: 70,
+          gap: 6,
+        }}
+      >
+        <div
+          className='text-sm font-semibold text-white uppercase'
+          style={{ fontSize: 12 }}
+        >
+          Severe Damage
+        </div>
+        <div className='text-xs text-black'>Mark 3 HP</div>
+      </div>
     </div>
   );
 };
