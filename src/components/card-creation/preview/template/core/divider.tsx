@@ -8,17 +8,17 @@ import { cn, getBrightness } from '@/lib/utils';
 const imgStyle = (type: CardType): React.CSSProperties => {
   switch (type) {
     case 'ancestry':
-      return { top: '-24px', height: '80px' };
+      return { top: '-31px', height: '65px', objectFit: 'contain' };
     case 'community':
-      return { top: '-76px' };
+      return { top: '-76px', height: '80px' };
     case 'equipment':
-      return { top: '-76px' };
+      return { top: '-76px', height: '80px' };
     case 'domain':
-      return { top: '-14px', height: '20px' };
+      return { top: '-14px', height: '30px' };
     case 'class':
     case 'subclass':
     default:
-      return { top: '-14px', height: '20px' };
+      return { top: '-14px', height: '30px' };
   }
 };
 
@@ -26,7 +26,7 @@ const titleStyle = (type: CardType): React.CSSProperties => {
   switch (type) {
     case 'ancestry':
       return {
-        top: '-6px',
+        top: '10px',
         right: '14px',
         letterSpacing: '2px',
         fontSize: '12px',
@@ -34,14 +34,14 @@ const titleStyle = (type: CardType): React.CSSProperties => {
     case 'community':
       return {
         right: '32px',
-        top: '-36px',
+        top: '-32px',
         letterSpacing: '1px',
         fontSize: '12px',
       };
     case 'equipment':
       return {
-        left: '35px',
-        top: '-36px',
+        left: '34px',
+        top: '-32px',
         letterSpacing: '1px',
         fontSize: '12px',
       };
@@ -50,7 +50,7 @@ const titleStyle = (type: CardType): React.CSSProperties => {
     case 'subclass':
       return {
         left: '50%',
-        top: '-11px',
+        top: '-6px',
         transform: 'translateX(-50%)',
         fontWeight: 700,
       };
@@ -79,7 +79,7 @@ export const Divider: React.FC<DivederProps> = ({ card }) => {
             background,
             left: '50%',
             top: '-12px',
-            height: '18px',
+            height: '30px',
             width: '300px',
             transform: 'translateX(-50%)',
           }}
