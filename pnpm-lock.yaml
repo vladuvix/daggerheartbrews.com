@@ -4,6 +4,11 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  html-to-image:
+    hash: f56d67e79773a32bcbb840433e616591ae185de0c29ca1b693a932926e5fbddc
+    path: patches/html-to-image.patch
+
 importers:
 
   .:
@@ -94,7 +99,7 @@ importers:
         version: 0.44.1(@neondatabase/serverless@1.0.0)(@types/pg@8.15.2)(kysely@0.28.2)(pg@8.16.0)(postgres@3.4.7)
       html-to-image:
         specifier: ^1.11.13
-        version: 1.11.13
+        version: 1.11.13(patch_hash=f56d67e79773a32bcbb840433e616591ae185de0c29ca1b693a932926e5fbddc)
       lucide-react:
         specifier: ^0.511.0
         version: 0.511.0(react@19.1.0)
@@ -6581,7 +6586,7 @@ snapshots:
     dependencies:
       function-bind: 1.1.2
 
-  html-to-image@1.11.13: {}
+  html-to-image@1.11.13(patch_hash=f56d67e79773a32bcbb840433e616591ae185de0c29ca1b693a932926e5fbddc): {}
 
   html-to-text@9.0.5:
     dependencies:
