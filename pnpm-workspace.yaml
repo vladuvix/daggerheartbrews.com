@@ -1,4 +1,0 @@
-patchedDependencies:
-  # This patches bug 532 in html-to-image: https://github.com/bubkoo/html-to-image/issues/532
-  # There is a PR open to fix this, but it has not been merged yet: https://github.com/bubkoo/html-to-image/pull/547
-  html-to-image: patches/html-to-image.patch
