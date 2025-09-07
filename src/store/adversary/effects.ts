@@ -1,4 +1,4 @@
-import { toPng } from 'html-to-image';
+import { toPng } from '@jpinsonneau/html-to-image';
 
 import type { ZustandGet, ZustandSet } from '../types';
 import type { AdversaryEffects, AdversaryState, AdversaryStore } from './types';
