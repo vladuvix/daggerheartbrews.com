@@ -86,7 +86,7 @@ export const CommunityCards = () => {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant='outline' className='capitalize'>
-              {selectedTypes.length > 0
+              {selectedTypes.length > 0 && selectedTypes.length < cardTypes.length
                 ? `Type: ${selectedTypes.join(', ')}`
                 : 'Type: All'}
               <ChevronDown className='text-muted-foreground ml-2 size-4' />
@@ -94,6 +94,15 @@ export const CommunityCards = () => {
           </DropdownMenuTrigger>
           <DropdownMenuContent align='start' className='min-w-64'>
             <DropdownMenuLabel>Filter by type</DropdownMenuLabel>
+            <DropdownMenuCheckboxItem
+              checked={selectedTypes.length === cardTypes.length}
+              onCheckedChange={(c) => {
+                setSelectedTypes(c ? [...cardTypes] : []);
+              }}
+              className='capitalize'
+            >
+              All
+            </DropdownMenuCheckboxItem>
             {cardTypes.map((t) => {
               const checked = selectedTypes.includes(t);
               return (
