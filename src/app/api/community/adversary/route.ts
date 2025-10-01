@@ -1,4 +1,4 @@
-import { desc, count, eq } from 'drizzle-orm';
+import { and, desc, count, eq, inArray, notInArray, or, ne } from 'drizzle-orm';
 import { NextResponse, type NextRequest } from 'next/server';
 
 import { db } from '@/lib/database';
@@ -18,11 +18,82 @@ export async function GET(request: NextRequest) {
     const pageSize = searchParams.get('page-size')
       ? Number(searchParams.get('page-size'))
       : 10;
+    const tierParam = searchParams.get('tier');
+    const roleParam = searchParams.get('role');
+    const tiers = tierParam
+      ? tierParam
+          .split(',')
+          .map((t) => Number(t.trim()))
+          .filter((n) => !Number.isNaN(n))
+      : [];
+
+    const baseFilter = eq(userAdversaries.public, true);
+    const tierFilter = tiers.length
+      ? inArray(adversaryPreviews.tier, tiers)
+      : undefined;
+    const predefinedRoles = [
+      'bruiser',
+      'horde',
+      'leader',
+      'minion',
+      'ranged',
+      'skulk',
+      'social',
+      'solo',
+      'standard',
+      'support',
+    ];
+    const roles = roleParam
+      ? roleParam
+          .split(',')
+          .map((r) => r.trim().toLowerCase())
+          .filter(Boolean)
+      : [];
+    const includeAll = roles.includes('all');
+    const includeCustom = roles.includes('custom');
+    const explicitRoles = roles.filter(
+      (r) => r !== 'all' && r !== 'custom',
+    );
+
+    let roleFilter:
+      | ReturnType<typeof inArray<typeof adversaryPreviews.subtype>>
+      | ReturnType<typeof and>
+      | ReturnType<typeof or>
+      | undefined;
+    if (!includeAll && (explicitRoles.length > 0 || includeCustom)) {
+      const roleConditions = [] as Array<
+        ReturnType<typeof inArray<typeof adversaryPreviews.subtype>> |
+          ReturnType<typeof and>
+      >;
+      if (explicitRoles.length > 0) {
+        roleConditions.push(inArray(adversaryPreviews.subtype, explicitRoles));
+      }
+      if (includeCustom) {
+        roleConditions.push(
+          and(
+            notInArray(adversaryPreviews.subtype, predefinedRoles),
+            ne(adversaryPreviews.subtype, ''),
+          ),
+        );
+      }
+      roleFilter = roleConditions.length === 1 ? roleConditions[0] : or(...roleConditions);
+    }
+
+    const composedFilters = [baseFilter] as any[];
+    if (tierFilter) composedFilters.push(tierFilter);
+    if (roleFilter) composedFilters.push(roleFilter);
+    const whereFilter = composedFilters.length === 1
+      ? baseFilter
+      : and(...(composedFilters as [any, ...any[]]));
 
     const [result] = await db
       .select({ count: count() })
       .from(userAdversaries)
-      .where(eq(userAdversaries.public, true));
+      .leftJoin(
+        adversaryPreviews,
+        eq(userAdversaries.adversaryPreviewId, adversaryPreviews.id),
+      )
+      .where(whereFilter);
     const meta = { page, pageSize, total: result.count };
 
     const data = await db
@@ -33,7 +104,7 @@ export async function GET(request: NextRequest) {
         adversaryPreviews,
         eq(userAdversaries.adversaryPreviewId, adversaryPreviews.id),
       )
-      .where(eq(userAdversaries.public, true))
+      .where(whereFilter)
       .orderBy(desc(userAdversaries.createdAt))
       .limit(pageSize)
       .offset((page - 1) * pageSize);

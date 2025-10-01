@@ -1,4 +1,4 @@
-import { desc, count, eq } from 'drizzle-orm';
+import { and, desc, count, eq, inArray } from 'drizzle-orm';
 import { NextResponse, type NextRequest } from 'next/server';
 
 import { db } from '@/lib/database';
@@ -14,11 +14,27 @@ export async function GET(request: NextRequest) {
     const pageSize = searchParams.get('page-size')
       ? Number(searchParams.get('page-size'))
       : 10;
+    const typeParam = searchParams.get('type');
+    const types = typeParam
+      ? typeParam
+          .split(',')
+          .map((t) => t.trim())
+          .filter(Boolean)
+      : [];
 
+    // Build filters
+    const baseFilter = eq(userCards.public, true);
+    const typeFilter = types.length
+      ? inArray(cardPreviews.type, types)
+      : undefined;
+    const whereFilter = typeFilter ? and(baseFilter, typeFilter) : baseFilter;
+
+    // Count with the same filter conditions
     const [result] = await db
       .select({ count: count() })
       .from(userCards)
-      .where(eq(userCards.public, true));
+      .leftJoin(cardPreviews, eq(userCards.cardPreviewId, cardPreviews.id))
+      .where(whereFilter);
     const meta = { page, pageSize, total: result.count };
 
     const data = await db
@@ -26,7 +42,7 @@ export async function GET(request: NextRequest) {
       .from(userCards)
       .leftJoin(users, eq(userCards.userId, users.id))
       .leftJoin(cardPreviews, eq(userCards.cardPreviewId, cardPreviews.id))
-      .where(eq(userCards.public, true))
+      .where(whereFilter)
       .orderBy(desc(userCards.createdAt))
       .limit(pageSize)
       .offset((page - 1) * pageSize);

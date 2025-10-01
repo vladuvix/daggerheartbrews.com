@@ -11,6 +11,15 @@ import type {
 import { Pagination, PaginationPageSizeDropdown } from '@/components/common';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CommunityAdversary } from '@/components/post';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { ChevronDown } from 'lucide-react';
 
 type Data = {
   userAdversary: UserAdversary;
@@ -27,17 +36,37 @@ export const CommunityAdversaries = () => {
     pageSize: 10,
     total: 100,
   });
+  const [selectedTiers, setSelectedTiers] = React.useState<number[]>([]);
+  const [selectedRoles, setSelectedRoles] = React.useState<string[]>([]);
+  const predefinedRoles = [
+    'bruiser',
+    'horde',
+    'leader',
+    'minion',
+    'ranged',
+    'skulk',
+    'social',
+    'solo',
+    'standard',
+    'support',
+  ];
 
   const loadData = async ({
     page,
     pageSize,
+    tiers,
+    roles,
   }: {
     page: number;
     pageSize: number;
+    tiers?: number[];
+    roles?: string[];
   }) => {
     setLoading(true);
+    const tierQuery = tiers && tiers.length > 0 ? `&tier=${tiers.join(',')}` : '';
+    const rolesQuery = roles && roles.length > 0 ? `&role=${roles.join(',')}` : '';
     const res = await fetch(
-      `/api/community/adversary?page=${page}&page-size=${pageSize}`,
+      `/api/community/adversary?page=${page}&page-size=${pageSize}${tierQuery}${rolesQuery}`,
     );
     const data: ApiResponse<Data[], Meta> = await res.json();
     setAdversaries(data.data);
@@ -50,7 +79,18 @@ export const CommunityAdversaries = () => {
   };
 
   React.useEffect(() => {
-    loadData({ page: 1, pageSize: 10 });
+    loadData({
+      page: 1,
+      pageSize: pagination.pageSize,
+      tiers: selectedTiers,
+      roles: selectedRoles,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTiers, selectedRoles]);
+
+  React.useEffect(() => {
+    loadData({ page: 1, pageSize: 10, tiers: [], roles: [] });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (loading) {
@@ -67,6 +107,98 @@ export const CommunityAdversaries = () => {
 
   return (
     <div className='mb-2 space-y-2'>
+      <div className='flex flex-col gap-2 items-start'>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant='outline' className='capitalize'>
+              {selectedTiers.length > 0 && selectedTiers.length < 5
+                ? `Tier: ${selectedTiers.join(', ')}`
+                : 'Tier: All'}
+              <ChevronDown className='text-muted-foreground ml-2 size-4' />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align='start' className='min-w-64'>
+            <DropdownMenuLabel>Filter by tier</DropdownMenuLabel>
+            <DropdownMenuCheckboxItem
+              checked={selectedTiers.length === 5}
+              onCheckedChange={(c) => {
+                setSelectedTiers(c ? [1, 2, 3, 4, 5] : []);
+              }}
+            >
+              All
+            </DropdownMenuCheckboxItem>
+            {[1, 2, 3, 4, 5].map((tier) => {
+              const checked = selectedTiers.includes(tier);
+              return (
+                <DropdownMenuCheckboxItem
+                  key={tier}
+                  checked={checked}
+                  onCheckedChange={(c) => {
+                    setSelectedTiers((prev) => {
+                      if (c) return Array.from(new Set([...prev, tier]));
+                      return prev.filter((x) => x !== tier);
+                    });
+                  }}
+                >
+                  {tier}
+                </DropdownMenuCheckboxItem>
+              );
+            })}
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant='outline' className='capitalize'>
+              {selectedRoles.length > 0 && selectedRoles.length < predefinedRoles.length
+                ? `Role: ${selectedRoles.join(', ')}`
+                : 'Role: All'}
+              <ChevronDown className='text-muted-foreground ml-2 size-4' />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align='start' className='min-w-64'>
+            <DropdownMenuLabel>Filter by role</DropdownMenuLabel>
+            <DropdownMenuCheckboxItem
+              checked={selectedRoles.length === predefinedRoles.length}
+              onCheckedChange={(c) => {
+                setSelectedRoles(c ? [...predefinedRoles] : []);
+              }}
+              className='capitalize'
+            >
+              All
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem
+              checked={selectedRoles.includes('custom')}
+              onCheckedChange={(c) => {
+                setSelectedRoles((prev) => {
+                  if (c) return Array.from(new Set([...prev, 'custom']));
+                  return prev.filter((x) => x !== 'custom');
+                });
+              }}
+              className='capitalize'
+            >
+              custom
+            </DropdownMenuCheckboxItem>
+            {predefinedRoles.map((r) => {
+              const checked = selectedRoles.includes(r);
+              return (
+                <DropdownMenuCheckboxItem
+                  key={r}
+                  checked={checked}
+                  onCheckedChange={(c) => {
+                    setSelectedRoles((prev) => {
+                      if (c) return Array.from(new Set([...prev, r]));
+                      return prev.filter((x) => x !== r);
+                    });
+                  }}
+                  className='capitalize'
+                >
+                  {r}
+                </DropdownMenuCheckboxItem>
+              );
+            })}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
       {adversaries.map((adversary) => (
         <CommunityAdversary
           key={adversary.userAdversary.id}
@@ -80,13 +212,22 @@ export const CommunityAdversaries = () => {
           className='justify-end'
           currentPage={pagination.currentPage}
           pages={Math.ceil(pagination.total / pagination.pageSize)}
-          onPage={(page) => loadData({ page, pageSize: pagination.pageSize })}
+          onPage={(page) =>
+            loadData({
+              page,
+              pageSize: pagination.pageSize,
+              tiers: selectedTiers,
+              roles: selectedRoles,
+            })
+          }
           buttonProps={{ variant: 'ghost' }}
         >
           <PaginationPageSizeDropdown
             pageSize={pagination.pageSize}
             total={pagination.total}
-            onPageSize={(pageSize) => loadData({ page: 1, pageSize })}
+            onPageSize={(pageSize) =>
+              loadData({ page: 1, pageSize, tiers: selectedTiers, roles: selectedRoles })
+            }
             buttonProps={{ variant: 'ghost' }}
           />
         </Pagination>
