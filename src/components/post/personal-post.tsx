@@ -241,7 +241,7 @@ export const PersonalAdversary: React.FC<PersonalAdversaryProps> = ({
             </div>
           </ResponsiveDialog>
           <Button variant='secondary' onClick={handleTemplate}>
-            Use as template
+            Edit
           </Button>
           <Button variant='destructive' onClick={deleteAdversary}>
             Delete
