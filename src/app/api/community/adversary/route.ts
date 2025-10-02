@@ -1,4 +1,14 @@
-import { and, desc, count, eq, inArray, notInArray, or, ne } from 'drizzle-orm';
+import {
+  and,
+  desc,
+  count,
+  eq,
+  inArray,
+  notInArray,
+  or,
+  ne,
+  type SQL,
+} from 'drizzle-orm';
 import { NextResponse, type NextRequest } from 'next/server';
 
 import { db } from '@/lib/database';
@@ -51,9 +61,7 @@ export async function GET(request: NextRequest) {
       : [];
     const includeAll = roles.includes('all');
     const includeCustom = roles.includes('custom');
-    const explicitRoles = roles.filter(
-      (r) => r !== 'all' && r !== 'custom',
-    );
+    const explicitRoles = roles.filter((r) => r !== 'all' && r !== 'custom');
 
     let roleFilter:
       | ReturnType<typeof inArray<typeof adversaryPreviews.subtype>>
@@ -62,8 +70,8 @@ export async function GET(request: NextRequest) {
       | undefined;
     if (!includeAll && (explicitRoles.length > 0 || includeCustom)) {
       const roleConditions = [] as Array<
-        ReturnType<typeof inArray<typeof adversaryPreviews.subtype>> |
-          ReturnType<typeof and>
+        | ReturnType<typeof inArray<typeof adversaryPreviews.subtype>>
+        | ReturnType<typeof and>
       >;
       if (explicitRoles.length > 0) {
         roleConditions.push(inArray(adversaryPreviews.subtype, explicitRoles));
@@ -76,15 +84,15 @@ export async function GET(request: NextRequest) {
           ),
         );
       }
-      roleFilter = roleConditions.length === 1 ? roleConditions[0] : or(...roleConditions);
+      roleFilter =
+        roleConditions.length === 1 ? roleConditions[0] : or(...roleConditions);
     }
 
-    const composedFilters = [baseFilter] as any[];
+    const composedFilters = [baseFilter] as SQL<unknown>[];
     if (tierFilter) composedFilters.push(tierFilter);
     if (roleFilter) composedFilters.push(roleFilter);
-    const whereFilter = composedFilters.length === 1
-      ? baseFilter
-      : and(...(composedFilters as [any, ...any[]]));
+    const whereFilter =
+      composedFilters.length === 1 ? baseFilter : and(...composedFilters);
 
     const [result] = await db
       .select({ count: count() })
