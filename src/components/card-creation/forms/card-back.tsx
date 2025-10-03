@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCardActions, useCardStore } from '@/store';
 import { FormContainer } from '@/components/common/form';
 import { CollapsibleContent } from '@/components/ui/collapsible';
@@ -9,6 +9,60 @@ import { Button } from '@/components/ui/button';
 import { UploadIcon, X } from 'lucide-react';
 import { useFileUpload, formatBytes } from '@/hooks/use-file-upload';
 import { fileToBase64 } from '@/lib/utils';
+import {
+  type Area,
+  ImageCropper,
+  ImageCropperArea,
+  ImageCropperImage,
+} from '@/components/common';
+
+const createImage = (url: string): Promise<HTMLImageElement> =>
+  new Promise((resolve, reject) => {
+    const image = document.createElement('img');
+    image.addEventListener('load', () => resolve(image));
+    image.addEventListener('error', (error) => reject(error));
+    image.setAttribute('crossOrigin', 'anonymous');
+    image.src = url;
+  });
+
+const getCroppedImage = async (
+  url: string,
+  area: Area,
+): Promise<Blob | null> => {
+  try {
+    const image = await createImage(url);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      return null;
+    }
+    canvas.width = area.width;
+    canvas.height = area.height;
+    ctx.drawImage(
+      image,
+      area.x,
+      area.y,
+      area.width,
+      area.height,
+      0,
+      0,
+      area.width,
+      area.height,
+    );
+    return new Promise((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (blob) {
+          resolve(blob);
+        } else {
+          reject();
+        }
+      }, 'image/png');
+    });
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
+};
 
 export const CardBackForm = () => {
   const { settings } = useCardStore();
@@ -35,6 +89,18 @@ export const CardBackForm = () => {
       setExistingLogoPreview(null);
     }
   }, [settings.cardBack, settings.customCardBackLogo, file]);
+
+  const handleCropChange = async (area: Area | null) => {
+    if (area && file?.preview) {
+      const blob = await getCroppedImage(file.preview, area);
+      if (blob) {
+        const cropped = await fileToBase64(blob);
+        if (settings.customCardBackLogo !== cropped) {
+          setSettings({ customCardBackLogo: cropped });
+        }
+      }
+    }
+  };
 
   return (
     <FormContainer className='w-full' title='Back of the Card' collapsible defaultOpen>
@@ -153,20 +219,34 @@ export const CardBackForm = () => {
                     </div>
                   ) : null}
                 </div>
+                
+                {/* Image Cropper for Custom Logo */}
+                <CollapsibleContent>
+                  {(file?.preview || existingLogoPreview) ? (
+                    <ImageCropper
+                      className='h-64 rounded'
+                      image={file?.preview || existingLogoPreview!}
+                      onCropChange={handleCropChange}
+                    >
+                      <ImageCropperImage />
+                      <ImageCropperArea />
+                    </ImageCropper>
+                  ) : null}
+                </CollapsibleContent>
               </div>
             )}
 
             {/* Card Back Preview - Shows only selected option */}
             <div className='flex justify-center'>
-              <div className='w-[170px] aspect-[2/3] overflow-hidden rounded border bg-gray-100 relative'>
+              <div className='w-[221px] aspect-[2/3] overflow-hidden rounded border bg-gray-100 relative'>
                 {!imageError ? (
                   <>
                     {/* Background Image */}
                     <Image
                       src={settings.cardBack === 'default' ? '/assets/card/dh-card-back-1.webp' : '/assets/card/dh-card-back-2.webp'}
                       alt={`${settings.cardBack} card back`}
-                      width={170}
-                      height={255}
+                      width={221}
+                      height={332}
                       className='h-full w-full object-cover'
                       onError={() => setImageError(true)}
                     />
@@ -175,7 +255,7 @@ export const CardBackForm = () => {
                     {settings.cardBack === 'custom' && (settings.customCardBackLogo || existingLogoPreview) && (
                       <div className='absolute inset-0 flex items-center justify-center'>
                         <div 
-                          className='w-[66px] h-[66px] rounded-full overflow-hidden shadow-lg'
+                          className='w-[86px] h-[86px] rounded-full overflow-hidden shadow-lg'
                           style={{ 
                             backgroundImage: `url(${settings.customCardBackLogo || existingLogoPreview})`,
                             backgroundSize: 'cover',
