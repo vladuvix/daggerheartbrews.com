@@ -4,9 +4,11 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Check, ChevronsUpDown } from 'lucide-react';
+import { Check, ChevronsUpDown, FileText } from 'lucide-react';
 import { CardPreview, CardBackPreview } from '@/components/card-creation/preview';
 import type { CardDetails, CardSettings } from '@/lib/types';
+import jsPDF from 'jspdf';
+import { toPng } from '@jpinsonneau/html-to-image';
 
 type UserCard = {
   userCard: {
@@ -27,10 +29,10 @@ export default function Page() {
   const [selectedCards, setSelectedCards] = useState<(UserCard | null)[]>([null, null, null, null]);
   const [openDropdowns, setOpenDropdowns] = useState<boolean[]>([false, false, false, false]);
   const [cardSettings, setCardSettings] = useState<CardSettings[]>([
-    { border: true, boldRulesText: true, artist: true, credits: true, placeholderImage: true },
-    { border: true, boldRulesText: true, artist: true, credits: true, placeholderImage: true },
-    { border: true, boldRulesText: true, artist: true, credits: true, placeholderImage: true },
-    { border: true, boldRulesText: true, artist: true, credits: true, placeholderImage: true },
+    { border: true, boldRulesText: true, artist: true, credits: true, placeholderImage: true, cardBack: 'default' },
+    { border: true, boldRulesText: true, artist: true, credits: true, placeholderImage: true, cardBack: 'default' },
+    { border: true, boldRulesText: true, artist: true, credits: true, placeholderImage: true, cardBack: 'default' },
+    { border: true, boldRulesText: true, artist: true, credits: true, placeholderImage: true, cardBack: 'default' },
   ]);
 
   const fetchUserCards = async () => {
@@ -94,17 +96,182 @@ export default function Page() {
     setCardSettings(newSettings);
   };
 
+  const exportAsPDF = async () => {
+    try {
+      // Wait longer to ensure all images are loaded
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Preload all images to ensure they're ready
+      const imageUrls = [
+        '/assets/images/quill-icon.png',
+        '/assets/images/dh-cgl-logo.png',
+        '/assets/card/banner.webp',
+        '/assets/card/level-bg.webp',
+        '/assets/card/dh-armor-bg.webp',
+        '/assets/card/dh-one-hand.webp',
+        '/assets/card/dh-two-hands.webp',
+        '/assets/card/dh-card-back-1.webp',
+        '/assets/card/dh-card-back-2.webp'
+      ];
+      
+      // Add divider images
+      const cardTypes = ['domain', 'class', 'subclass', 'ancestry', 'community', 'equipment', 'transformation'];
+      cardTypes.forEach(type => {
+        imageUrls.push(`/assets/card/divider-${type === 'subclass' ? 'class' : type}.webp`);
+      });
+      
+      // Preload all images
+      await Promise.all(imageUrls.map(url => {
+        return new Promise((resolve) => {
+          const img = new Image();
+          img.onload = () => resolve(true);
+          img.onerror = () => resolve(false);
+          img.src = url;
+        });
+      }));
+      
+      // Preload custom card images and logos
+      const customImages = selectedCards
+        .filter(card => card?.cardPreview)
+        .flatMap(card => [
+          card?.cardPreview?.image,
+          card?.cardPreview?.customCardBackLogo,
+          card?.cardPreview?.domainPrimaryIcon,
+          card?.cardPreview?.domainSecondaryIcon
+        ])
+        .filter(Boolean);
+      
+      if (customImages.length > 0) {
+        await Promise.all(customImages.map(url => {
+          return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => resolve(true);
+            img.onerror = () => resolve(false);
+            img.src = url as string;
+          });
+        }));
+      }
+      
+      // Create a new PDF document
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      // A4 dimensions: 210mm x 297mm
+      const pageWidth = 210;
+      const pageHeight = 297;
+      
+      // Card dimensions: 63.5mm x 88.9mm
+      const cardWidth = 63.5;
+      const cardHeight = 88.9;
+      
+      // Calculate positions for 2x2 grid with safe margins
+      const margin = 20; // Safe margin for printers
+      const availableWidth = pageWidth - (2 * margin);
+      const availableHeight = pageHeight - (2 * margin);
+      
+      // Calculate spacing between cards
+      const horizontalSpacing = (availableWidth - (2 * cardWidth)) / 3;
+      const verticalSpacing = (availableHeight - (2 * cardHeight)) / 3;
+      
+      // Calculate card positions
+      const cardPositions = [
+        { x: margin + horizontalSpacing, y: margin + verticalSpacing },
+        { x: margin + horizontalSpacing + cardWidth + horizontalSpacing, y: margin + verticalSpacing },
+        { x: margin + horizontalSpacing, y: margin + verticalSpacing + cardHeight + verticalSpacing },
+        { x: margin + horizontalSpacing + cardWidth + horizontalSpacing, y: margin + verticalSpacing + cardHeight + verticalSpacing }
+      ];
+
+      // Generate front page
+      pdf.addPage();
+      pdf.setFontSize(12);
+      pdf.text('Page 1 - Front', pageWidth / 2, 15, { align: 'center' });
+
+      for (let i = 0; i < 4; i++) {
+        if (selectedCards[i]?.cardPreview) {
+          // Find the existing card preview element in the DOM
+          const cardContainer = document.querySelector(`[data-card-index="${i}"]`);
+          const existingCardElement = cardContainer?.querySelector('.scale-75');
+          
+          
+          if (existingCardElement) {
+            // Convert to PNG using the existing rendered element
+            const pngDataUrl = await toPng(existingCardElement as HTMLElement, {
+              cacheBust: true,
+              pixelRatio: 2.2,
+              width: 340,
+              height: 476,
+              includeQueryParams: true,
+              skipFonts: false,
+              skipAutoScale: false,
+              backgroundColor: '#ffffff'
+            });
+
+            // Add image to PDF
+            pdf.addImage(pngDataUrl, 'PNG', cardPositions[i].x, cardPositions[i].y, cardWidth, cardHeight);
+          }
+        }
+      }
+
+      // Generate back page
+      pdf.addPage();
+      pdf.text('Page 2 - Back', pageWidth / 2, 15, { align: 'center' });
+
+      for (let i = 0; i < 4; i++) {
+        if (selectedCards[i]?.cardPreview) {
+          // Find the existing card back preview element in the DOM
+          const cardBackContainer = document.querySelector(`[data-card-back-index="${i}"]`);
+          const existingCardElement = cardBackContainer?.querySelector('.scale-75');
+          
+          
+          if (existingCardElement) {
+            // Convert to PNG using the existing rendered element
+            const pngDataUrl = await toPng(existingCardElement as HTMLElement, {
+              cacheBust: true,
+              pixelRatio: 2.2,
+              width: 340,
+              height: 476,
+              includeQueryParams: true,
+              skipFonts: false,
+              skipAutoScale: false,
+              backgroundColor: '#ffffff'
+            });
+
+            // Add image to PDF
+            pdf.addImage(pngDataUrl, 'PNG', cardPositions[i].x, cardPositions[i].y, cardWidth, cardHeight);
+          }
+        }
+      }
+
+      // Save the PDF
+      pdf.save('daggerheart-cards-print.pdf');
+    } catch (error) {
+      console.error('Error creating PDF:', error);
+    }
+  };
+
   if (showCardPreview) {
     return (
       <div>
         <div className='mb-6 flex items-center justify-between'>
           <h1 className='font-eveleth-clean text-2xl font-bold'>Print Preview - Cards</h1>
-          <Button 
-            variant='outline' 
-            onClick={() => setShowCardPreview(false)}
-          >
-            Back to Options
-          </Button>
+          <div className='flex gap-2'>
+            <Button
+              onClick={exportAsPDF}
+              className='flex items-center gap-2'
+            >
+              <FileText className='h-4 w-4' />
+              Export as PDF
+            </Button>
+            <Button 
+              variant='outline' 
+              onClick={() => setShowCardPreview(false)}
+            >
+              Back to Options
+            </Button>
+          </div>
         </div>
         
         <div className='space-y-8'>
@@ -115,6 +282,7 @@ export default function Page() {
               {Array.from({ length: 4 }).map((_, index) => (
                 <div 
                   key={`front-${index}`}
+                  data-card-index={index}
                   className='relative border-2 border-dashed border-gray-300 bg-gray-50'
                 >
                   {/* Card Preview Background Layer */}
@@ -221,6 +389,7 @@ export default function Page() {
               {Array.from({ length: 4 }).map((_, index) => (
                 <div 
                   key={`back-${index}`}
+                  data-card-back-index={index}
                   className='border-2 border-dashed border-gray-300 bg-gray-50'
                 >
                   <div className='flex h-full items-center justify-center p-2'>
