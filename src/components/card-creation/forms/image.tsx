@@ -72,10 +72,20 @@ export const ImageForm = () => {
   const [{ files }, { removeFile, openFileDialog, getInputProps }] =
     useFileUpload({ accept: 'image/*' });
   const [file] = files;
+  const [existingImagePreview, setExistingImagePreview] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     setCardDetails({ image: file?.preview || undefined });
   }, [file]);
+
+  // Load existing image when editing a card
+  React.useEffect(() => {
+    if (image && !file) {
+      setExistingImagePreview(image);
+    } else if (!image || file) {
+      setExistingImagePreview(null);
+    }
+  }, [image, file]);
 
   const handleCropChange = async (area: Area | null) => {
     if (area && file?.preview) {
@@ -135,13 +145,42 @@ export const ImageForm = () => {
                 <X aria-hidden='true' />
               </Button>
             </div>
+          ) : existingImagePreview ? (
+            <div className='dark:bg-input/30 flex items-center justify-between gap-2 rounded-md border bg-white p-2'>
+              <div className='flex items-center gap-4 overflow-hidden'>
+                <div className='bg-accent aspect-square shrink-0 rounded'>
+                  <img
+                    className='size-10 rounded-[inherit] object-cover'
+                    src={existingImagePreview}
+                    alt='Existing image'
+                  />
+                </div>
+                <div>
+                  <p className='truncate text-sm font-medium'>Existing image</p>
+                  <p className='text-muted-foreground text-sm'>
+                    Previously uploaded
+                  </p>
+                </div>
+              </div>
+              <Button
+                size='icon'
+                variant='ghost'
+                onClick={() => {
+                  setCardDetails({ image: undefined });
+                  setExistingImagePreview(null);
+                }}
+                aria-label='Remove existing image'
+              >
+                <X aria-hidden='true' />
+              </Button>
+            </div>
           ) : null}
         </div>
         <CollapsibleContent>
-          {file?.preview ? (
+          {(file?.preview || existingImagePreview) ? (
             <ImageCropper
               className='h-64 rounded'
-              image={file.preview}
+              image={file?.preview || existingImagePreview!}
               onCropChange={handleCropChange}
             >
               <ImageCropperImage />

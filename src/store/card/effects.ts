@@ -50,12 +50,18 @@ const loadOptions =
 const saveCardPreview =
   (get: ZustandGet<CardStore>): CardEffects['saveCardPreview'] =>
   async () => {
-    const { card, userCard } = get();
+    const { card, userCard, settings } = get();
+    // Include card back settings in the card data
+    const cardWithSettings = {
+      ...card,
+      cardBack: settings.cardBack,
+      customCardBackLogo: settings.customCardBackLogo,
+    };
     const res = await fetch(
       `/api/card-preview/${userCard?.cardPreviewId && card.id && userCard?.cardPreviewId === card.id ? card.id : ''}`,
       {
         method: 'POST',
-        body: JSON.stringify({ card, userCard }),
+        body: JSON.stringify({ card: cardWithSettings, userCard }),
       },
     );
     const data = await res.json();

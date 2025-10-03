@@ -21,7 +21,7 @@ import {
 
 export const DomainPropertiesForm = () => {
   const {
-    card: { subtype, stress, level, domainPrimary, domainPrimaryColor },
+    card: { subtype, stress, level, domainPrimary, domainPrimaryColor, domainPrimaryIcon },
   } = useCardStore();
   const { domainColor, domainIncludes } = useCardComputed();
   const { setCardDetails } = useCardActions();
@@ -53,6 +53,7 @@ export const DomainPropertiesForm = () => {
             setCardDetails({ domainPrimaryColor: v, domainSecondaryColor: v })
           }
           onIconChange={(v) => setCardDetails({ domainPrimaryIcon: v })}
+          existingIcon={domainPrimaryIcon}
         />
         <CollapsibleContent className='flex gap-2'>
           <div className='w-full space-y-2'>

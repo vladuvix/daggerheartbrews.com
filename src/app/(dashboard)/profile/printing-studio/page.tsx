@@ -59,6 +59,21 @@ export default function Page() {
     newSelectedCards[cardIndex] = card;
     setSelectedCards(newSelectedCards);
     
+    // Load card back settings for the selected card
+    if (card?.cardPreview) {
+      const newCardSettings = [...cardSettings];
+      newCardSettings[cardIndex] = {
+        border: true,
+        boldRulesText: true,
+        artist: true,
+        credits: true,
+        placeholderImage: true,
+        cardBack: card.cardPreview.cardBack || 'default',
+        customCardBackLogo: card.cardPreview.customCardBackLogo,
+      };
+      setCardSettings(newCardSettings);
+    }
+    
     const newOpenDropdowns = [...openDropdowns];
     newOpenDropdowns[cardIndex] = false;
     setOpenDropdowns(newOpenDropdowns);
@@ -208,8 +223,26 @@ export default function Page() {
                   key={`back-${index}`}
                   className='border-2 border-dashed border-gray-300 bg-gray-50'
                 >
-                  <div className='flex h-full items-center justify-center text-sm text-gray-500'>
-                    Card {index + 1} Back
+                  <div className='flex h-full items-center justify-center'>
+                    {selectedCards[index]?.cardPreview ? (
+                      <div className='w-full h-full flex items-center justify-center'>
+                        {cardSettings[index].cardBack === 'custom' && cardSettings[index].customCardBackLogo ? (
+                          <img
+                            src={cardSettings[index].customCardBackLogo}
+                            alt={`${selectedCards[index]!.cardPreview!.name} card back`}
+                            className='w-full h-full object-cover rounded'
+                          />
+                        ) : (
+                          <img
+                            src='/assets/card/dh-card-back-1.webp'
+                            alt={`${selectedCards[index]!.cardPreview!.name} card back`}
+                            className='w-full h-full object-cover rounded'
+                          />
+                        )}
+                      </div>
+                    ) : (
+                      <div className='text-sm text-gray-500'>Card {index + 1} Back</div>
+                    )}
                   </div>
                 </div>
               ))}
