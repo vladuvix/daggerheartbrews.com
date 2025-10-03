@@ -146,14 +146,15 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
   );
 };
 
-export const CardBackPreview: React.FC<CardBackPreviewProps> = ({
+export const CardBackPreview = React.forwardRef<HTMLDivElement, CardBackPreviewProps>(({
   className,
   card,
   settings,
   ...props
-}) => {
+}, ref) => {
   return (
     <div
+      ref={ref}
       className={cn(
         'aspect-card w-[340px] overflow-hidden',
         settings.border && 'rounded-lg border-2 border-amber-300 shadow',
@@ -189,7 +190,7 @@ export const CardBackPreview: React.FC<CardBackPreviewProps> = ({
       </div>
     </div>
   );
-};
+});
 
 export const CardCreationPreview = () => {
   const router = useRouter();

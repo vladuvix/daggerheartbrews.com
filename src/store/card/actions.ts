@@ -110,6 +110,8 @@ export const createActions = (
   setLoading: (loading: boolean) => set({ loading }),
   setPreviewRef: (ref: React.RefObject<HTMLDivElement | null>) =>
     set({ preview: ref }),
+  setCardBackPreviewRef: (ref: React.RefObject<HTMLDivElement | null>) =>
+    set({ cardBackPreview: ref }),
   setCardTypeDefaults: setCardTypeDefaults(set, get),
   setCardDetails: setCardDetails(set),
   setUserCard: setUserCard(set),

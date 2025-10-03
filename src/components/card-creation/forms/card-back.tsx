@@ -2,11 +2,11 @@
 
 import Image from 'next/image';
 import React, { useState, useEffect } from 'react';
-import { useCardActions, useCardStore } from '@/store';
+import { useCardActions, useCardStore, useCardEffects } from '@/store';
 import { FormContainer } from '@/components/common/form';
 import { CollapsibleContent } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
-import { UploadIcon, X } from 'lucide-react';
+import { UploadIcon, X, Download } from 'lucide-react';
 import { useFileUpload, formatBytes } from '@/hooks/use-file-upload';
 import { fileToBase64 } from '@/lib/utils';
 import {
@@ -15,6 +15,7 @@ import {
   ImageCropperArea,
   ImageCropperImage,
 } from '@/components/common';
+import { CardBackPreview } from '../preview';
 
 const createImage = (url: string): Promise<HTMLImageElement> =>
   new Promise((resolve, reject) => {
@@ -65,12 +66,18 @@ const getCroppedImage = async (
 };
 
 export const CardBackForm = () => {
-  const { settings } = useCardStore();
-  const { setSettings } = useCardActions();
+  const { settings, card } = useCardStore();
+  const { setSettings, setCardBackPreviewRef } = useCardActions();
+  const { downloadCardBackImage } = useCardEffects();
   const [imageError, setImageError] = useState(false);
   const [{ files }, { removeFile, openFileDialog, getInputProps }] = useFileUpload({ accept: 'image/*' });
   const [file] = files;
   const [existingLogoPreview, setExistingLogoPreview] = useState<string | null>(null);
+  const cardBackRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    setCardBackPreviewRef(cardBackRef);
+  }, [setCardBackPreviewRef]);
 
   // Handle logo upload for custom card back
   useEffect(() => {
@@ -237,45 +244,23 @@ export const CardBackForm = () => {
             )}
 
             {/* Card Back Preview - Shows only selected option */}
-            <div className='flex justify-center'>
-              <div className='w-[221px] aspect-card overflow-hidden rounded border bg-gray-100 relative'>
-                {!imageError ? (
-                  <>
-                    {/* Background Image */}
-                    <Image
-                      src={settings.cardBack === 'default' ? '/assets/card/dh-card-back-1.webp' : '/assets/card/dh-card-back-2.webp'}
-                      alt={`${settings.cardBack} card back`}
-                      width={221}
-                      height={309}
-                      className='h-full w-full object-cover'
-                      onError={() => setImageError(true)}
-                    />
-                    
-                    {/* Overlay Logo for Custom Card Back */}
-                    {settings.cardBack === 'custom' && (settings.customCardBackLogo || existingLogoPreview) && (
-                      <div className='absolute inset-0 flex items-center justify-center'>
-                        <div 
-                          className='w-[86px] h-[86px] rounded-full overflow-hidden shadow-lg'
-                          style={{ 
-                            backgroundImage: `url(${settings.customCardBackLogo || existingLogoPreview})`,
-                            backgroundSize: 'cover',
-                            backgroundPosition: 'center',
-                            backgroundRepeat: 'no-repeat'
-                          }}
-                        />
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className='text-center text-gray-500 flex items-center justify-center h-full'>
-                    <div>
-                      <div className='text-sm font-medium'>{settings.cardBack === 'default' ? 'Default' : 'Custom'} Card Back</div>
-                      <div className='text-xs'>dh-card-back-{settings.cardBack === 'default' ? '1' : '2'}.webp</div>
-                      <div className='text-xs mt-1'>Add image file to load preview</div>
-                    </div>
-                  </div>
-                )}
+            <div className='flex flex-col items-center space-y-2'>
+              <div className='scale-[0.65] origin-center'>
+                <CardBackPreview
+                  ref={cardBackRef}
+                  card={card}
+                  settings={settings}
+                />
               </div>
+              <Button 
+                variant='outline' 
+                size='sm'
+                onClick={downloadCardBackImage}
+                className='flex items-center gap-2'
+              >
+                <Download className='h-4 w-4' />
+                Export as PNG
+              </Button>
             </div>
           </div>
         </div>
