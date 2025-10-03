@@ -11,7 +11,16 @@ const downloadImage =
     const { name, type } = card;
     try {
       if (preview?.current) {
-        await toPng(preview.current, { cacheBust: true, pixelRatio: 2.2 }).then((data) => {
+        // Wait a bit to ensure all images are loaded
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        await toPng(preview.current, { 
+          cacheBust: true, 
+          pixelRatio: 2.2,
+          includeQueryParams: true,
+          skipFonts: false,
+          skipAutoScale: false
+        }).then((data) => {
           const link = document.createElement('a');
           link.download = `daggerheart-${type}-${name}.png`;
           link.href = data;
@@ -30,7 +39,16 @@ const downloadCardBackImage =
     const { name, type } = card;
     try {
       if (cardBackPreview?.current) {
-        await toPng(cardBackPreview.current, { cacheBust: true, pixelRatio: 2.2 }).then((data) => {
+        // Wait a bit to ensure all images are loaded
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        await toPng(cardBackPreview.current, { 
+          cacheBust: true, 
+          pixelRatio: 2.2,
+          includeQueryParams: true,
+          skipFonts: false,
+          skipAutoScale: false
+        }).then((data) => {
           const link = document.createElement('a');
           link.download = `daggerheart-${type}-${name}-back.png`;
           link.href = data;
