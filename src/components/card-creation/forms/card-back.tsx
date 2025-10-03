@@ -238,7 +238,7 @@ export const CardBackForm = () => {
 
             {/* Card Back Preview - Shows only selected option */}
             <div className='flex justify-center'>
-              <div className='w-[221px] aspect-[2/3] overflow-hidden rounded border bg-gray-100 relative'>
+              <div className='w-[221px] aspect-card overflow-hidden rounded border bg-gray-100 relative'>
                 {!imageError ? (
                   <>
                     {/* Background Image */}
@@ -246,7 +246,7 @@ export const CardBackForm = () => {
                       src={settings.cardBack === 'default' ? '/assets/card/dh-card-back-1.webp' : '/assets/card/dh-card-back-2.webp'}
                       alt={`${settings.cardBack} card back`}
                       width={221}
-                      height={332}
+                      height={309}
                       className='h-full w-full object-cover'
                       onError={() => setImageError(true)}
                     />
