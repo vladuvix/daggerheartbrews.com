@@ -106,6 +106,8 @@ export const ClassPropertiesForm = () => {
       domainSecondary,
       domainPrimaryColor,
       domainSecondaryColor,
+      domainPrimaryIcon,
+      domainSecondaryIcon,
     },
   } = useCardStore();
   const { domainColor, domainIncludes, classColors, classDomains } =
@@ -224,6 +226,7 @@ export const ClassPropertiesForm = () => {
                       })
                 }
                 onIconChange={(v) => setCardDetails({ domainPrimaryIcon: v })}
+                existingIcon={domainPrimaryIcon}
               />
               <DomainSelect
                 id='domain'
@@ -243,6 +246,7 @@ export const ClassPropertiesForm = () => {
                     : setCardDetails({ domainSecondary: 'custom' })
                 }
                 onIconChange={(v) => setCardDetails({ domainSecondaryIcon: v })}
+                existingIcon={domainSecondaryIcon}
               />
             </>
           ) : null}
@@ -262,6 +266,8 @@ export const SubClassPropertiesForm = () => {
       domainSecondary,
       domainPrimaryColor,
       domainSecondaryColor,
+      domainPrimaryIcon,
+      domainSecondaryIcon,
     },
   } = useCardStore();
   const { classColors, classDomains, domainColor, domainIncludes } =
@@ -364,6 +370,7 @@ export const SubClassPropertiesForm = () => {
             }
             onColorChange={(v) => setCardDetails({ domainPrimaryColor: v })}
             onIconChange={(v) => setCardDetails({ domainPrimaryIcon: v })}
+            existingIcon={domainPrimaryIcon}
           />
           <DomainSelect
             id='domain'
@@ -381,6 +388,7 @@ export const SubClassPropertiesForm = () => {
             }
             onColorChange={(v) => setCardDetails({ domainSecondaryColor: v })}
             onIconChange={(v) => setCardDetails({ domainSecondaryIcon: v })}
+            existingIcon={domainSecondaryIcon}
           />
         </div>
       ) : null}

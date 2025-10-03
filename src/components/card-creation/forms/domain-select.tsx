@@ -182,12 +182,8 @@ const CustomDomainLogo: React.FC<{
   const [existingLogoPreview, setExistingLogoPreview] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    if (onChange) {
-      if (file?.preview) {
-        fileToBase64(file.file as File).then((data) => onChange(data));
-      } else {
-        onChange(undefined);
-      }
+    if (onChange && file?.preview) {
+      fileToBase64(file.file as File).then((data) => onChange(data));
     }
   }, [file]);
 

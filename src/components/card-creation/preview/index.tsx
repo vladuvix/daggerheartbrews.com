@@ -27,6 +27,11 @@ type CardPreviewProps = React.ComponentProps<'div'> & {
   settings: CardSettings;
 };
 
+type CardBackPreviewProps = React.ComponentProps<'div'> & {
+  card: CardDetails;
+  settings: CardSettings;
+};
+
 export const CardPreview: React.FC<CardPreviewProps> = ({
   className,
   card,
@@ -134,6 +139,51 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
                 height={20}
               />
             </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const CardBackPreview: React.FC<CardBackPreviewProps> = ({
+  className,
+  card,
+  settings,
+  ...props
+}) => {
+  return (
+    <div
+      className={cn(
+        'aspect-card w-[340px] overflow-hidden',
+        settings.border && 'rounded-lg border-2 border-amber-300 shadow',
+        className,
+      )}
+      {...props}
+    >
+      <div className='relative flex h-full flex-col bg-white text-black'>
+        {/* Background Image */}
+        <div className='relative h-full w-full'>
+          <Image
+            src={settings.cardBack === 'custom' ? '/assets/card/dh-card-back-2.webp' : '/assets/card/dh-card-back-1.webp'}
+            alt={`${card.name} card back`}
+            fill
+            className='object-cover'
+          />
+          
+          {/* Overlay Logo for Custom Card Back */}
+          {settings.cardBack === 'custom' && settings.customCardBackLogo && (
+            <div className='absolute inset-0 flex items-center justify-center'>
+              <div 
+                className='w-[132px] h-[132px] rounded-full overflow-hidden shadow-lg'
+                style={{ 
+                  backgroundImage: `url(${settings.customCardBackLogo})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  backgroundRepeat: 'no-repeat'
+                }}
+              />
+            </div>
           )}
         </div>
       </div>

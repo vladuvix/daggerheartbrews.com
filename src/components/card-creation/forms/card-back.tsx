@@ -24,8 +24,6 @@ export const CardBackForm = () => {
       fileToBase64(file.file as File).then((data) => {
         setSettings({ customCardBackLogo: data });
       });
-    } else if (settings.cardBack === 'custom' && !file) {
-      setSettings({ customCardBackLogo: undefined });
     }
   }, [file, settings.cardBack, setSettings]);
 
@@ -177,7 +175,7 @@ export const CardBackForm = () => {
                     {settings.cardBack === 'custom' && (settings.customCardBackLogo || existingLogoPreview) && (
                       <div className='absolute inset-0 flex items-center justify-center'>
                         <div 
-                          className='w-[85px] h-[85px] rounded-full overflow-hidden border-2 border-white shadow-lg'
+                          className='w-[66px] h-[66px] rounded-full overflow-hidden shadow-lg'
                           style={{ 
                             backgroundImage: `url(${settings.customCardBackLogo || existingLogoPreview})`,
                             backgroundSize: 'cover',

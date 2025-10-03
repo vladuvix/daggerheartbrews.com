@@ -65,17 +65,25 @@ const setCardTypeDefaults =
 
 const setCardDetails =
   (set: ZustandSet<CardState>): CardActions['setCardDetails'] =>
-  (details) =>
-    set((state) => ({ 
-      ...state, 
-      card: { ...state.card, ...details },
-      // Load card back settings from card data if available
-      settings: {
-        ...state.settings,
-        cardBack: details.cardBack || state.settings.cardBack || 'default',
-        customCardBackLogo: details.customCardBackLogo || state.settings.customCardBackLogo || undefined,
-      }
-    }));
+  (details) => {
+    set((state) => {
+      // Filter out undefined values to prevent overwriting existing data
+      const filteredDetails = Object.fromEntries(
+        Object.entries(details).filter(([_, value]) => value !== undefined)
+      );
+      
+      return { 
+        ...state, 
+        card: { ...state.card, ...filteredDetails },
+        // Load card back settings from card data if available
+        settings: {
+          ...state.settings,
+          cardBack: details.cardBack || state.settings.cardBack || 'default',
+          customCardBackLogo: details.customCardBackLogo || state.settings.customCardBackLogo || undefined,
+        }
+      };
+    });
+  };
 
 const setUserCard =
   (set: ZustandSet<CardState>): CardActions['setUserCard'] =>

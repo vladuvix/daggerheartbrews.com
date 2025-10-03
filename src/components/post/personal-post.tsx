@@ -136,6 +136,8 @@ export const PersonalCard: React.FC<PersonalCardProps> = ({
                   artist: true,
                   credits: true,
                   placeholderImage: true,
+                  cardBack: 'default',
+                  customCardBackLogo: undefined,
                 }}
               />
             </div>

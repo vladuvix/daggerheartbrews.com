@@ -75,7 +75,9 @@ export const ImageForm = () => {
   const [existingImagePreview, setExistingImagePreview] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    setCardDetails({ image: file?.preview || undefined });
+    if (file?.preview) {
+      setCardDetails({ image: file.preview });
+    }
   }, [file]);
 
   // Load existing image when editing a card

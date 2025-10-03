@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Check, ChevronsUpDown } from 'lucide-react';
-import { CardPreview } from '@/components/card-creation/preview';
+import { CardPreview, CardBackPreview } from '@/components/card-creation/preview';
 import type { CardDetails, CardSettings } from '@/lib/types';
 
 type UserCard = {
@@ -223,22 +223,13 @@ export default function Page() {
                   key={`back-${index}`}
                   className='border-2 border-dashed border-gray-300 bg-gray-50'
                 >
-                  <div className='flex h-full items-center justify-center'>
+                  <div className='flex h-full items-center justify-center p-2'>
                     {selectedCards[index]?.cardPreview ? (
-                      <div className='w-full h-full flex items-center justify-center'>
-                        {cardSettings[index].cardBack === 'custom' && cardSettings[index].customCardBackLogo ? (
-                          <img
-                            src={cardSettings[index].customCardBackLogo}
-                            alt={`${selectedCards[index]!.cardPreview!.name} card back`}
-                            className='w-full h-full object-cover rounded'
-                          />
-                        ) : (
-                          <img
-                            src='/assets/card/dh-card-back-1.webp'
-                            alt={`${selectedCards[index]!.cardPreview!.name} card back`}
-                            className='w-full h-full object-cover rounded'
-                          />
-                        )}
+                      <div className='scale-75 origin-center'>
+                        <CardBackPreview
+                          card={selectedCards[index]!.cardPreview!}
+                          settings={cardSettings[index]}
+                        />
                       </div>
                     ) : (
                       <div className='text-sm text-gray-500'>Card {index + 1} Back</div>
