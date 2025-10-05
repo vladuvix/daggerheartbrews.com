@@ -89,6 +89,11 @@ export const PersonalCard: React.FC<PersonalCardProps> = ({
     }
   };
   const deleteCard = async () => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${cardPreview.name || 'Untitled'}"? This action cannot be undone.`
+    );
+    if (!confirmed) return;
+    
     try {
       const res = await fetch(`/api/community/cards/${userCard.id}`, {
         method: 'DELETE',
@@ -97,7 +102,7 @@ export const PersonalCard: React.FC<PersonalCardProps> = ({
       if (!data.success) {
         throw Error('Something went wrong');
       }
-      toast.success('Success');
+      toast.success('Card deleted successfully');
     } catch (e) {
       toast.error('Something went wrong. Unable to delete card.');
     }
@@ -200,6 +205,11 @@ export const PersonalAdversary: React.FC<PersonalAdversaryProps> = ({
     }
   };
   const deleteAdversary = async () => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${adversaryPreview.name || 'Untitled'}"? This action cannot be undone.`
+    );
+    if (!confirmed) return;
+    
     try {
       const res = await fetch(`/api/community/adversary/${userAdversary.id}`, {
         method: 'DELETE',
@@ -208,7 +218,7 @@ export const PersonalAdversary: React.FC<PersonalAdversaryProps> = ({
       if (!data.success) {
         throw Error('Something went wrong');
       }
-      toast.success('Success');
+      toast.success('Adversary deleted successfully');
     } catch (e) {
       toast.error('Something went wrong. Unable to delete adversary.');
     }
