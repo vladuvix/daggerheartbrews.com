@@ -9,9 +9,10 @@ type AdversaryPreviewStatblockProps = React.ComponentProps<'div'> & {
   adversary: AdversaryDetails;
 };
 
-export const AdversaryPreviewStatblock: React.FC<
+export const AdversaryPreviewStatblock = React.forwardRef<
+  HTMLDivElement,
   AdversaryPreviewStatblockProps
-> = ({ className, adversary, ...props }) => {
+>(({ className, adversary, ...props }, ref) => {
   const {
     name,
     type,
@@ -36,6 +37,7 @@ export const AdversaryPreviewStatblock: React.FC<
   const formatThresholds = (n: number) => (n === 0 ? 'None' : n);
   return (
     <div
+      ref={ref}
       className={cn(
         'space-y-1 rounded-md border p-4 text-black',
         type === 'adversary' && 'border-[#bcab84] bg-[#f4f0e5]',
@@ -112,19 +114,19 @@ export const AdversaryPreviewStatblock: React.FC<
       
       {/* Adversary Image Display */}
       {image && (
-        <div className='mt-4'>
+        <div className='mt-4 flex flex-col items-center'>
           <h3 className='font-eveleth-clean text-xl mb-2'>Image</h3>
-          <div className='w-[500px] h-[500px] overflow-hidden rounded-md border'>
+          <div className='w-[500px] h-[500px] overflow-hidden rounded-md border flex items-center justify-center'>
             <Image
               src={image}
               alt={`${name} image`}
               width={500}
               height={500}
-              className='w-full h-full object-cover'
+              className='w-full h-full object-contain'
             />
           </div>
         </div>
       )}
     </div>
   );
-};
+});
