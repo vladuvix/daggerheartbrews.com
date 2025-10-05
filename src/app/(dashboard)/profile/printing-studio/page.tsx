@@ -9,6 +9,10 @@ import { CardPreview, CardBackPreview } from '@/components/card-creation/preview
 import type { CardDetails, CardSettings } from '@/lib/types';
 import jsPDF from 'jspdf';
 import { toPng } from '@jpinsonneau/html-to-image';
+import { createRoot } from 'react-dom/client';
+import React from 'react';
+import JSZip from 'jszip';
+import { useCardStore, useCardActions, useCardEffects } from '@/store/card';
 
 type UserCard = {
   userCard: {
@@ -28,6 +32,7 @@ export default function Page() {
   const [loading, setLoading] = useState(false);
   const [selectedCards, setSelectedCards] = useState<(UserCard | null)[]>([null, null, null, null]);
   const [openDropdowns, setOpenDropdowns] = useState<boolean[]>([false, false, false, false]);
+  const [isExporting, setIsExporting] = useState(false);
   const [cardSettings, setCardSettings] = useState<CardSettings[]>([
     { border: true, boldRulesText: true, artist: true, credits: true, placeholderImage: true, cardBack: 'default' },
     { border: true, boldRulesText: true, artist: true, credits: true, placeholderImage: true, cardBack: 'default' },
@@ -96,7 +101,43 @@ export default function Page() {
     setCardSettings(newSettings);
   };
 
+  // Helper function to export individual card using existing DOM elements
+  const exportIndividualCard = async (
+    card: CardDetails,
+    settings: CardSettings,
+    isBack: boolean = false,
+    cardIndex: number
+  ): Promise<string> => {
+    // Find the existing card element in the DOM
+    const selector = isBack ? `[data-card-back-index="${cardIndex}"]` : `[data-card-index="${cardIndex}"]`;
+    const cardContainer = document.querySelector(selector);
+    const cardElement = cardContainer?.querySelector('.aspect-card');
+    
+    if (!cardElement) {
+      throw new Error(`Card element not found for index ${cardIndex}`);
+    }
+    
+    // Wait for the element to update
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
+    try {
+      // Capture at the element's natural size (750x1050px)
+      const dataUrl = await toPng(cardElement as HTMLElement, {
+        cacheBust: true,
+        pixelRatio: 1,
+        includeQueryParams: true,
+        skipFonts: false,
+        skipAutoScale: false
+      });
+      
+      return dataUrl;
+    } catch (error) {
+      throw error;
+    }
+  };
+
   const exportAsPDF = async () => {
+    setIsExporting(true);
     try {
       // Wait longer to ensure all images are loaded
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -167,6 +208,10 @@ export default function Page() {
       const cardWidth = 63.5;
       const cardHeight = 88.9;
       
+      // High resolution capture for print quality (750x1050px = 300 DPI)
+      const targetPixelWidth = 750;
+      const targetPixelHeight = 1050;
+      
       // Calculate positions for 2x2 grid with safe margins
       const margin = 20; // Safe margin for printers
       const availableWidth = pageWidth - (2 * margin);
@@ -187,29 +232,63 @@ export default function Page() {
       // Generate front page (first page is created automatically)
       pdf.setFontSize(12);
       pdf.text('Page 1 - Front', pageWidth / 2, 15, { align: 'center' });
+      
+      // Add 10cm ruler with mm markings
+      const rulerStartX = pageWidth - 25; // Position ruler on the right side
+      const rulerStartY = 30;
+      const rulerLength = 100; // 10cm = 100mm
+      
+      // Draw ruler line
+      pdf.setLineWidth(0.5);
+      pdf.line(rulerStartX, rulerStartY, rulerStartX, rulerStartY + rulerLength);
+      
+      // Add ruler markings every mm
+      for (let i = 0; i <= 100; i++) {
+        const y = rulerStartY + i;
+        let markLength;
+        
+        if (i % 10 === 0) {
+          markLength = 4; // Longest marks every 10mm (cm)
+        } else if (i % 5 === 0) {
+          markLength = 2.5; // Medium marks every 5mm
+        } else {
+          markLength = 1; // Short marks every mm
+        }
+        
+        pdf.line(rulerStartX, y, rulerStartX + markLength, y);
+        
+        // Add numbers every 10mm
+        if (i % 10 === 0) {
+          pdf.setFontSize(8);
+          pdf.text(`${i}`, rulerStartX + 5, y + 1);
+        }
+      }
+      
+      // Add ruler label
+      pdf.setFontSize(8);
+      pdf.text('10cm Ruler', rulerStartX + 2, rulerStartY - 5);
 
+      // Store PNG data URLs for saving
+      const pngDataUrls: string[] = [];
+
+      // Export individual front cards
       for (let i = 0; i < 4; i++) {
         if (selectedCards[i]?.cardPreview) {
-          // Find the existing card preview element in the DOM
-          const cardContainer = document.querySelector(`[data-card-index="${i}"]`);
-          const existingCardElement = cardContainer?.querySelector('.scale-75');
-          
-          
-          if (existingCardElement) {
-            // Convert to PNG using the existing rendered element
-            const pngDataUrl = await toPng(existingCardElement as HTMLElement, {
-              cacheBust: true,
-              pixelRatio: 2.2,
-              width: 340,
-              height: 476,
-              includeQueryParams: true,
-              skipFonts: false,
-              skipAutoScale: false,
-              backgroundColor: '#ffffff'
-            });
-
-            // Add image to PDF
+          try {
+            const pngDataUrl = await exportIndividualCard(
+              selectedCards[i]!.cardPreview!,
+              cardSettings[i],
+              false, // isBack = false for front cards
+              i // cardIndex
+            );
+            
+            // Store PNG data URL
+            pngDataUrls.push(pngDataUrl);
+            
+            // Add image to PDF (scaled down for PDF)
             pdf.addImage(pngDataUrl, 'PNG', cardPositions[i].x, cardPositions[i].y, cardWidth, cardHeight);
+          } catch (error) {
+            console.error(`Error exporting front card ${i}:`, error);
           }
         }
       }
@@ -226,36 +305,65 @@ export default function Page() {
         cardPositions[2]  // Back 4 goes to position 3
       ];
 
+      // Export individual back cards
       for (let i = 0; i < 4; i++) {
         if (selectedCards[i]?.cardPreview) {
-          // Find the existing card back preview element in the DOM
-          const cardBackContainer = document.querySelector(`[data-card-back-index="${i}"]`);
-          const existingCardElement = cardBackContainer?.querySelector('.scale-75');
-          
-          
-          if (existingCardElement) {
-            // Convert to PNG using the existing rendered element
-            const pngDataUrl = await toPng(existingCardElement as HTMLElement, {
-              cacheBust: true,
-              pixelRatio: 2.2,
-              width: 340,
-              height: 476,
-              includeQueryParams: true,
-              skipFonts: false,
-              skipAutoScale: false,
-              backgroundColor: '#ffffff'
-            });
-
+          try {
+            const pngDataUrl = await exportIndividualCard(
+              selectedCards[i]!.cardPreview!,
+              cardSettings[i],
+              true, // isBack = true for back cards
+              i // cardIndex
+            );
+            
+            // Store PNG data URL
+            pngDataUrls.push(pngDataUrl);
+            
             // Add image to PDF using duplex positions
             pdf.addImage(pngDataUrl, 'PNG', duplexPositions[i].x, duplexPositions[i].y, cardWidth, cardHeight);
+          } catch (error) {
+            console.error(`Error exporting back card ${i}:`, error);
           }
         }
       }
 
-      // Save the PDF
-      pdf.save('daggerheart-cards-print.pdf');
+      // Create zip file with PDF and PNGs
+      const zip = new JSZip();
+      
+      // Add PDF to zip
+      const pdfBlob = pdf.output('blob');
+      zip.file('daggerheart-cards-print.pdf', pdfBlob);
+      
+      // Add PNGs to zip with proper naming
+      for (let i = 0; i < pngDataUrls.length; i++) {
+        const response = await fetch(pngDataUrls[i]);
+        const blob = await response.blob();
+        
+        // Name files like the card store does: daggerheart-{type}-{name}.png
+        const card = selectedCards[Math.floor(i / 2)]?.cardPreview;
+        const isBack = i % 2 === 1; // Odd indices are back cards
+        const cardName = card?.name || `card-${Math.floor(i / 2) + 1}`;
+        const cardType = card?.type || 'card';
+        const fileName = isBack 
+          ? `daggerheart-${cardType}-${cardName}-back.png`
+          : `daggerheart-${cardType}-${cardName}.png`;
+        
+        zip.file(fileName, blob);
+      }
+      
+      // Generate and download zip file
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      const link = document.createElement('a');
+      link.download = 'daggerheart-cards-export.zip';
+      link.href = URL.createObjectURL(zipBlob);
+      link.click();
+      
+      // Clean up the object URL
+      URL.revokeObjectURL(link.href);
     } catch (error) {
       console.error('Error creating PDF:', error);
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -267,10 +375,11 @@ export default function Page() {
           <div className='flex gap-2'>
             <Button
               onClick={exportAsPDF}
+              disabled={isExporting}
               className='flex items-center gap-2'
             >
               <FileText className='h-4 w-4' />
-              Export as PDF
+              {isExporting ? 'Exporting...' : 'Export as ZIP'}
             </Button>
             <Button 
               variant='outline' 
@@ -283,9 +392,9 @@ export default function Page() {
         
         <div className='space-y-8'>
           {/* Page 1 - Front of cards */}
-          <div className='mx-auto max-w-[210mm] bg-white p-4 shadow-lg' style={{ aspectRatio: '210/297' }}>
+          <div className='mx-auto max-w-[1600px] bg-white p-4 shadow-lg'>
             <div className='mb-2 text-center text-sm font-medium text-gray-600'>Page 1 - Front</div>
-            <div className='grid h-full grid-cols-2 grid-rows-2 gap-2'>
+            <div className='grid grid-cols-2 grid-rows-2 gap-8' style={{ height: '1200px' }}>
               {Array.from({ length: 4 }).map((_, index) => (
                 <div 
                   key={`front-${index}`}
@@ -293,14 +402,12 @@ export default function Page() {
                   className='relative border-2 border-dashed border-gray-300 bg-gray-50'
                 >
                   {/* Card Preview Background Layer */}
-                  <div className='absolute inset-0 flex items-center justify-center p-2'>
+                  <div className='absolute inset-0 flex items-center justify-center p-8'>
                     {selectedCards[index]?.cardPreview ? (
-                      <div className='scale-75 origin-center'>
-                        <CardPreview
-                          card={selectedCards[index]!.cardPreview!}
-                          settings={cardSettings[index]}
-                        />
-                      </div>
+                      <CardPreview
+                        card={selectedCards[index]!.cardPreview!}
+                        settings={cardSettings[index]}
+                      />
                     ) : (
                       <div className='text-xs text-gray-500'>Card Preview</div>
                     )}
@@ -390,23 +497,21 @@ export default function Page() {
           </div>
 
           {/* Page 2 - Back of cards */}
-          <div className='mx-auto max-w-[210mm] bg-white p-4 shadow-lg' style={{ aspectRatio: '210/297' }}>
+          <div className='mx-auto max-w-[1600px] bg-white p-4 shadow-lg'>
             <div className='mb-2 text-center text-sm font-medium text-gray-600'>Page 2 - Back</div>
-            <div className='grid h-full grid-cols-2 grid-rows-2 gap-2'>
+            <div className='grid grid-cols-2 grid-rows-2 gap-8' style={{ height: '1200px' }}>
               {Array.from({ length: 4 }).map((_, index) => (
                 <div 
                   key={`back-${index}`}
                   data-card-back-index={index}
                   className='border-2 border-dashed border-gray-300 bg-gray-50'
                 >
-                  <div className='flex h-full items-center justify-center p-2'>
+                  <div className='flex h-full items-center justify-center p-8'>
                     {selectedCards[index]?.cardPreview ? (
-                      <div className='scale-75 origin-center'>
-                        <CardBackPreview
-                          card={selectedCards[index]!.cardPreview!}
-                          settings={cardSettings[index]}
-                        />
-                      </div>
+                      <CardBackPreview
+                        card={selectedCards[index]!.cardPreview!}
+                        settings={cardSettings[index]}
+                      />
                     ) : (
                       <div className='text-sm text-gray-500'>Card {index + 1} Back</div>
                     )}

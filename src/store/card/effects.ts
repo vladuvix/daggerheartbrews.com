@@ -16,7 +16,9 @@ const downloadImage =
         
         await toPng(preview.current, { 
           cacheBust: true, 
-          pixelRatio: 2.2,
+          pixelRatio: 1,
+          width: 750,
+          height: 1050,
           includeQueryParams: true,
           skipFonts: false,
           skipAutoScale: false
@@ -42,9 +44,11 @@ const downloadCardBackImage =
         // Wait a bit to ensure all images are loaded
         await new Promise(resolve => setTimeout(resolve, 100));
         
-        await toPng(cardBackPreview.current, { 
-          cacheBust: true, 
-          pixelRatio: 2.2,
+        await toPng(cardBackPreview.current, {
+          cacheBust: true,
+          pixelRatio: 1,
+          width: 750,
+          height: 1050,
           includeQueryParams: true,
           skipFonts: false,
           skipAutoScale: false
