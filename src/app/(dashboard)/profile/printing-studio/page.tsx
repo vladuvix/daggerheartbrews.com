@@ -268,8 +268,8 @@ export default function Page() {
       pdf.setFontSize(8);
       pdf.text('10cm Ruler', rulerStartX + 2, rulerStartY - 5);
 
-      // Store PNG data URLs for saving
-      const pngDataUrls: string[] = [];
+      // Store PNG data URLs for saving with index and side
+      const pngDataUrls: { dataUrl: string; index: number; isBack: boolean }[] = [];
 
       // Export individual front cards
       for (let i = 0; i < 4; i++) {
@@ -283,7 +283,7 @@ export default function Page() {
             );
             
             // Store PNG data URL
-            pngDataUrls.push(pngDataUrl);
+            pngDataUrls.push({ dataUrl: pngDataUrl, index: i, isBack: false });
             
             // Add image to PDF (scaled down for PDF)
             pdf.addImage(pngDataUrl, 'PNG', cardPositions[i].x, cardPositions[i].y, cardWidth, cardHeight);
@@ -317,7 +317,7 @@ export default function Page() {
             );
             
             // Store PNG data URL
-            pngDataUrls.push(pngDataUrl);
+            pngDataUrls.push({ dataUrl: pngDataUrl, index: i, isBack: true });
             
             // Add image to PDF using duplex positions
             pdf.addImage(pngDataUrl, 'PNG', duplexPositions[i].x, duplexPositions[i].y, cardWidth, cardHeight);
@@ -336,13 +336,13 @@ export default function Page() {
       
       // Add PNGs to zip with proper naming
       for (let i = 0; i < pngDataUrls.length; i++) {
-        const response = await fetch(pngDataUrls[i]);
+        const { dataUrl, index, isBack } = pngDataUrls[i];
+        const response = await fetch(dataUrl);
         const blob = await response.blob();
         
         // Name files like the card store does: daggerheart-{type}-{name}.png
-        const card = selectedCards[Math.floor(i / 2)]?.cardPreview;
-        const isBack = i % 2 === 1; // Odd indices are back cards
-        const cardName = card?.name || `card-${Math.floor(i / 2) + 1}`;
+        const card = selectedCards[index]?.cardPreview;
+        const cardName = card?.name || `card-${index + 1}`;
         const cardType = card?.type || 'card';
         const fileName = isBack 
           ? `daggerheart-${cardType}-${cardName}-back.png`
@@ -369,7 +369,7 @@ export default function Page() {
 
   if (showCardPreview) {
     return (
-      <div>
+      <div className='overflow-x-auto'>
         <div className='mb-6 flex items-center justify-between'>
           <h1 className='font-eveleth-clean text-2xl font-bold'>Print Preview - Cards</h1>
           <div className='flex gap-2'>
@@ -392,17 +392,17 @@ export default function Page() {
         
         <div className='space-y-8'>
           {/* Page 1 - Front of cards */}
-          <div className='mx-auto max-w-[1600px] bg-white p-4 shadow-lg'>
-            <div className='mb-2 text-center text-sm font-medium text-gray-600'>Page 1 - Front</div>
-            <div className='grid grid-cols-2 grid-rows-2 gap-8' style={{ height: '1200px' }}>
+          <div className='mx-auto max-w-[2000px] bg-white p-12 shadow-lg'>
+            <div className='mb-6 text-center text-xl font-medium text-gray-600'>Page 1 - Front</div>
+            <div className='flex flex-col gap-12'>
               {Array.from({ length: 4 }).map((_, index) => (
                 <div 
                   key={`front-${index}`}
                   data-card-index={index}
-                  className='relative border-2 border-dashed border-gray-300 bg-gray-50'
+                  className='relative border-2 border-dashed border-gray-300 bg-gray-50 min-h-[1300px]'
                 >
                   {/* Card Preview Background Layer */}
-                  <div className='absolute inset-0 flex items-center justify-center p-8'>
+                  <div className='absolute inset-0 flex items-center justify-center p-24'>
                     {selectedCards[index]?.cardPreview ? (
                       <CardPreview
                         card={selectedCards[index]!.cardPreview!}
@@ -497,16 +497,16 @@ export default function Page() {
           </div>
 
           {/* Page 2 - Back of cards */}
-          <div className='mx-auto max-w-[1600px] bg-white p-4 shadow-lg'>
-            <div className='mb-2 text-center text-sm font-medium text-gray-600'>Page 2 - Back</div>
-            <div className='grid grid-cols-2 grid-rows-2 gap-8' style={{ height: '1200px' }}>
+          <div className='mx-auto max-w-[2000px] bg-white p-12 shadow-lg'>
+            <div className='mb-6 text-center text-xl font-medium text-gray-600'>Page 2 - Back</div>
+            <div className='flex flex-col gap-12'>
               {Array.from({ length: 4 }).map((_, index) => (
                 <div 
                   key={`back-${index}`}
                   data-card-back-index={index}
-                  className='border-2 border-dashed border-gray-300 bg-gray-50'
+                  className='border-2 border-dashed border-gray-50 min-h-[1300px]'
                 >
-                  <div className='flex h-full items-center justify-center p-8'>
+                  <div className='flex h-full items-center justify-center p-24'>
                     {selectedCards[index]?.cardPreview ? (
                       <CardBackPreview
                         card={selectedCards[index]!.cardPreview!}
