@@ -184,8 +184,7 @@ export default function Page() {
         { x: margin + horizontalSpacing + cardWidth + horizontalSpacing, y: margin + verticalSpacing + cardHeight + verticalSpacing }
       ];
 
-      // Generate front page
-      pdf.addPage();
+      // Generate front page (first page is created automatically)
       pdf.setFontSize(12);
       pdf.text('Page 1 - Front', pageWidth / 2, 15, { align: 'center' });
 
@@ -219,6 +218,14 @@ export default function Page() {
       pdf.addPage();
       pdf.text('Page 2 - Back', pageWidth / 2, 15, { align: 'center' });
 
+      // For duplex printing, swap positions: 1↔2 and 3↔4
+      const duplexPositions = [
+        cardPositions[1], // Back 1 goes to position 2
+        cardPositions[0], // Back 2 goes to position 1
+        cardPositions[3], // Back 3 goes to position 4
+        cardPositions[2]  // Back 4 goes to position 3
+      ];
+
       for (let i = 0; i < 4; i++) {
         if (selectedCards[i]?.cardPreview) {
           // Find the existing card back preview element in the DOM
@@ -239,8 +246,8 @@ export default function Page() {
               backgroundColor: '#ffffff'
             });
 
-            // Add image to PDF
-            pdf.addImage(pngDataUrl, 'PNG', cardPositions[i].x, cardPositions[i].y, cardWidth, cardHeight);
+            // Add image to PDF using duplex positions
+            pdf.addImage(pngDataUrl, 'PNG', duplexPositions[i].x, duplexPositions[i].y, cardWidth, cardHeight);
           }
         }
       }
