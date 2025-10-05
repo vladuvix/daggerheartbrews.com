@@ -245,7 +245,7 @@ export const CardBackForm = () => {
 
             {/* Card Back Preview - Shows only selected option */}
             <div className='flex flex-col items-center space-y-2'>
-              <div className='scale-[0.28] origin-center'>
+              <div className='w-[750px] h-[1050px] overflow-hidden'>
                 <CardBackPreview
                   ref={cardBackRef}
                   card={card}
