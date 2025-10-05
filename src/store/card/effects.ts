@@ -17,11 +17,10 @@ const downloadImage =
         await toPng(preview.current, { 
           cacheBust: true, 
           pixelRatio: 1,
-          width: 750,
-          height: 1050,
           includeQueryParams: true,
           skipFonts: false,
-          skipAutoScale: false
+          skipAutoScale: false,
+          backgroundColor: '#ffffff'
         }).then((data) => {
           const link = document.createElement('a');
           link.download = `daggerheart-${type}-${name}.png`;
@@ -47,11 +46,10 @@ const downloadCardBackImage =
         await toPng(cardBackPreview.current, {
           cacheBust: true,
           pixelRatio: 1,
-          width: 750,
-          height: 1050,
           includeQueryParams: true,
           skipFonts: false,
-          skipAutoScale: false
+          skipAutoScale: false,
+          backgroundColor: '#ffffff'
         }).then((data) => {
           const link = document.createElement('a');
           link.download = `daggerheart-${type}-${name}-back.png`;
