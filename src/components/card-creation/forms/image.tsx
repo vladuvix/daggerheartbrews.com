@@ -183,6 +183,7 @@ export const ImageForm = () => {
             <ImageCropper
               className='h-64 rounded'
               image={file?.preview || existingImagePreview!}
+              minZoom={0.2}
               onCropChange={handleCropChange}
             >
               <ImageCropperImage />

@@ -75,8 +75,13 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
               'font-eveleth-clean z-20 w-full px-13 pt-9',
               ['ancestry', 'community'].includes(card.type)
                 ? 'text-4xl'
-                : 'text-center text-lg',
+                : 'text-center',
             )}
+            style={{
+              fontSize: ['domain', 'class', 'subclass', 'equipment', 'transformation'].includes(card.type)
+                ? '24px' // ~30% larger than ~18px (text-lg)
+                : undefined,
+            }}
           >
             {card.name}
           </p>
@@ -175,15 +180,13 @@ export const CardBackPreview = React.forwardRef<HTMLDivElement, CardBackPreviewP
           {/* Overlay Logo for Custom Card Back */}
           {settings.cardBack === 'custom' && settings.customCardBackLogo && (
             <div className='absolute inset-0 flex items-center justify-center'>
-              <div 
-                className='w-[290px] h-[290px] rounded-full overflow-hidden shadow-lg'
-                style={{ 
-                  backgroundImage: `url(${settings.customCardBackLogo})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  backgroundRepeat: 'no-repeat'
-                }}
-              />
+              <div className='w-[290px] h-[290px] rounded-full overflow-hidden shadow-lg'>
+                <img
+                  src={settings.customCardBackLogo}
+                  alt='Custom back logo'
+                  className='h-full w-full object-contain'
+                />
+              </div>
             </div>
           )}
         </div>

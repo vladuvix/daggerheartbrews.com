@@ -233,6 +233,7 @@ export const CardBackForm = () => {
                     <ImageCropper
                       className='h-64 rounded'
                       image={file?.preview || existingLogoPreview!}
+                      minZoom={0.2}
                       onCropChange={handleCropChange}
                     >
                       <ImageCropperImage />
