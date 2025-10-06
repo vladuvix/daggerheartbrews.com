@@ -556,8 +556,8 @@ export default function Page() {
               <p className='text-sm text-muted-foreground mb-4'>
                 Print your custom adversaries with stat blocks and abilities
               </p>
-              <Button className='w-full'>
-                Print Your Adversaries
+              <Button className='w-full' asChild>
+                <a href='/profile/printing-studio/adversaries'>Print Your Adversaries</a>
               </Button>
             </div>
           </div>
