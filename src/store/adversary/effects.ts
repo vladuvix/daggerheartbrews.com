@@ -32,7 +32,7 @@ export const createEffects = (
         `/api/adversary-preview/${userAdversary?.adversaryPreviewId && adversary.id && userAdversary?.adversaryPreviewId === adversary.id ? adversary.id : ''}`,
         {
           method: 'POST',
-          body: JSON.stringify({ adversary, userAdversary }),
+          body: JSON.stringify({ adversary, userAdversary, public: typeof userAdversary?.public === 'boolean' ? userAdversary.public : undefined }),
         },
       );
       const data = await res.json();

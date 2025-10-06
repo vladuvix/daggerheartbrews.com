@@ -21,6 +21,7 @@ import {
   Thresholds,
 } from './template/core';
 import { SettingsForm } from '../forms';
+import { Switch } from '@/components/ui/switch';
 
 type CardPreviewProps = React.ComponentProps<'div'> & {
   card: CardDetails;
@@ -197,8 +198,8 @@ export const CardBackPreview = React.forwardRef<HTMLDivElement, CardBackPreviewP
 
 export const CardCreationPreview = () => {
   const router = useRouter();
-  const { card, settings } = useCardStore();
-  const { setPreviewRef } = useCardActions();
+  const { card, settings, userCard } = useCardStore();
+  const { setPreviewRef, setUserCard } = useCardActions();
   const { downloadImage, saveCardPreview } = useCardEffects();
   const [pending, setPending] = React.useState(false);
 
@@ -239,6 +240,26 @@ export const CardCreationPreview = () => {
           {pending && <Loader2 className='animate-spin' />}
           Save
         </SavePreviewButton>
+      </div>
+      <div className='flex w-full items-center justify-between rounded-md border p-3'>
+        <label htmlFor='card-public' className='text-sm font-medium'>Public Visibility</label>
+        <Switch
+          id='card-public'
+          checked={userCard?.public ?? true}
+          onCheckedChange={async (checked) => {
+            // Update local store so value is retained on save
+            setUserCard({ ...(userCard || ({} as UserCard)), public: checked });
+            // If editing existing, persist immediately
+            if (userCard?.id) {
+              try {
+                await fetch('/api/community/cards/visibility', {
+                  method: 'PUT',
+                  body: JSON.stringify({ public: checked, userCardId: userCard.id }),
+                });
+              } catch {}
+            }
+          }}
+        />
       </div>
       <SettingsForm />
     </div>

@@ -100,7 +100,7 @@ const saveCardPreview =
       `/api/card-preview/${userCard?.cardPreviewId && card.id && userCard?.cardPreviewId === card.id ? card.id : ''}`,
       {
         method: 'POST',
-        body: JSON.stringify({ card: cardWithSettings, userCard }),
+        body: JSON.stringify({ card: cardWithSettings, userCard, public: typeof userCard?.public === 'boolean' ? userCard.public : undefined }),
       },
     );
     const data = await res.json();
