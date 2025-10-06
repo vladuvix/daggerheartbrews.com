@@ -14,7 +14,7 @@ import type { AdversaryDetails, CardDetails, User } from '@/lib/types';
 
 export const limitCardInserts = async ({
   session,
-  limit = 1000,
+  limit = 100,
 }: {
   session: { user: User };
   limit?: number;
