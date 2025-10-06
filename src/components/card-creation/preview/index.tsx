@@ -172,7 +172,7 @@ export const CardBackPreview = React.forwardRef<HTMLDivElement, CardBackPreviewP
         {/* Background Image */}
         <div className='relative h-full w-full'>
           <Image
-            src={settings.cardBack === 'custom' ? '/assets/card/dh-card-back-2.png' : '/assets/card/dh-card-back-1.png'}
+            src={settings.cardBack === 'custom' ? '/assets/card/dh-card-back-2.webp' : '/assets/card/dh-card-back-1.webp'}
             alt={`${card.name} card back`}
             fill
             className='object-cover'

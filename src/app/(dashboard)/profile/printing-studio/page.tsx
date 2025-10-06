@@ -151,8 +151,8 @@ export default function Page() {
         '/assets/card/dh-armor-bg.webp',
         '/assets/card/dh-one-hand.webp',
         '/assets/card/dh-two-hands.webp',
-        '/assets/card/dh-card-back-1.png',
-        '/assets/card/dh-card-back-2.png'
+        '/assets/card/dh-card-back-1.webp',
+        '/assets/card/dh-card-back-2.webp'
       ];
       
       // Add divider images
