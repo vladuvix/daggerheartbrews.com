@@ -80,7 +80,7 @@ export const updateCard = async ({
 
 export const limitAdversaryInserts = async ({
   session,
-  limit = 100,
+  limit = 1000,
 }: {
   session: { user: User };
   limit?: number;
